@@ -1,4 +1,6 @@
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
+github.com/egymgmbh/go-prefix-writer v0.0.0-20180609083313-7326ea162eca h1:7oodhZp9MZW0DBkrZXyUsJWKQFy35SVxjZ8K4vHXnk8=
+github.com/egymgmbh/go-prefix-writer v0.0.0-20180609083313-7326ea162eca/go.mod h1:UhMFM+dnOcm1f0Pve8uqRaxAhEYki+/CuA2BTDp2T04=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/jackpal/go-nat-pmp v1.0.2 h1:KzKSgb7qkJvOUTqYl9/Hg/me3pWgBmERKrTGD7BdWus=
 github.com/jackpal/go-nat-pmp v1.0.2/go.mod h1:QPH045xvCAeXUZOxsnwmrtiCoxIr9eob+4orBN1SBKc=

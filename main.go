@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/egymgmbh/go-prefix-writer/prefixer"
 	natpmp "github.com/jackpal/go-nat-pmp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -16,7 +17,7 @@ func main() {
 	ctx := context.Background()
 
 	out := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-		w.Out = os.Stderr
+		w.Out = prefixer.New(os.Stderr, func() string { return "[deluge-dynamic-incoming-port] " })
 		w.TimeFormat = time.RFC3339
 	})
 	log.Logger = zerolog.New(out).With().Timestamp().Logger()

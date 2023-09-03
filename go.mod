@@ -3,6 +3,7 @@ module github.com/JeffreyFalgout/deluge-dynamic-incoming-port
 go 1.21
 
 require (
+	github.com/egymgmbh/go-prefix-writer v0.0.0-20180609083313-7326ea162eca
 	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/rs/zerolog v1.30.0
 )
