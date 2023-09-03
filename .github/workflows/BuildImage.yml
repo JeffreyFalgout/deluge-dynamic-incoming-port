@@ -4,7 +4,7 @@ on: [push, pull_request_target, workflow_dispatch]
 
 env:
   GITHUB_REPO: "JeffreyFalgout/deluge-dynamic-incoming-port"
-  ENDPOINT: "JeffreyFalgout/deluge-dynamic-incoming-port"
+  ENDPOINT: "jeffreyfalgout/deluge-dynamic-incoming-port"
   BASEIMAGE: "deluge"
   MODNAME: "dynamic-incoming-port"
 
