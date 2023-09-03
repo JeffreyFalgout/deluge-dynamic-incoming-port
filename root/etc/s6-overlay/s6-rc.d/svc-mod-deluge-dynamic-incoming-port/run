@@ -6,6 +6,6 @@ cmd=(exec s6-setuidgid abc
 
 if [[ -n "${DELUGE_DYNAMIC_INCOMING_PORT_DEBUG:-}" ]]; then
   cmd+=( "--verbose" )
-}
+fi
 
 "${cmd[@]}"
