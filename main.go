@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -11,6 +12,7 @@ import (
 	natpmp "github.com/jackpal/go-nat-pmp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"golift.io/deluge"
 )
 
 func main() {
@@ -35,7 +37,12 @@ func main() {
 			Msg("NATPMP_GATEWAY is invalid")
 	}
 
-	deluge := newDelugeClient("localhost:8117")
+	deluge, err := newDelugeClient("http://localhost:8112")
+	if err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("Could not create Deluge client")
+	}
 	minTimeout := 250 * time.Millisecond
 	maxTimeout := 5 * time.Minute
 	timeout := minTimeout
@@ -62,7 +69,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, gateway net.IP, d *deluge) (time.Duration, error) {
+func run(ctx context.Context, gateway net.IP, d *delugeWrapper) (time.Duration, error) {
 	p, ttl, err := requestPortMapping(ctx, gateway)
 	if err != nil {
 		return 0, err
@@ -105,16 +112,24 @@ func requestPortMapping(ctx context.Context, gateway net.IP) (uint16, time.Durat
 	return m.MappedExternalPort, ttl, nil
 }
 
-type deluge struct {
-	addr string
-	port uint16
+type delugeWrapper struct {
+	deluge *deluge.Deluge
+	host   string
+	port   uint16
 }
 
-func newDelugeClient(addr string) *deluge {
-	return &deluge{addr: addr}
+func newDelugeClient(addr string) (*delugeWrapper, error) {
+	deluge, err := deluge.NewNoAuth(&deluge.Config{
+		URL:      addr,
+		HTTPUser: "deluge",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("deluge.NewNoAuth() = %w", err)
+	}
+	return &delugeWrapper{deluge: deluge}, nil
 }
 
-func (d *deluge) updateIncomingPort(ctx context.Context, port uint16) error {
+func (d *delugeWrapper) updateIncomingPort(ctx context.Context, port uint16) error {
 	log := log.Ctx(ctx)
 	if port == d.port {
 		log.Debug().
@@ -123,5 +138,45 @@ func (d *deluge) updateIncomingPort(ctx context.Context, port uint16) error {
 		return nil
 	}
 
-	return fmt.Errorf("todo")
+	if d.host == "" {
+		hostsResp, err := d.deluge.Get(ctx, deluge.GeHosts, nil)
+		if err != nil {
+			return fmt.Errorf("could not list Deluge hosts: %w", err)
+		}
+
+		var servers [][]any
+		if err := json.Unmarshal(hostsResp.Result, &servers); err != nil {
+			return fmt.Errorf("could not unmarshal hosts list: %w", err)
+		}
+
+		var arr zerolog.Array
+		for _, s := range servers {
+			arr.Interface(s)
+		}
+		log.Debug().
+			Array("hosts", &arr).
+			Msg("Discovered deluge hosts")
+
+		host, ok := servers[0][0].(string)
+		if !ok {
+			return fmt.Errorf("deluge hosts list has unexpected shape: %#v", servers)
+		}
+
+		d.host = host
+		if _, err := d.deluge.Get(ctx, "web.connect", []string{host}); err != nil {
+			return fmt.Errorf("could not connect to Deluge: %w", err)
+		}
+		log.Debug().
+			Str("host", host).
+			Msg("Connected to Deluge")
+	}
+
+	if _, err := d.deluge.Get(ctx, "core.set_config", []map[string]any{map[string]any{"listen_ports": []uint16{port, port}}}); err != nil {
+		return fmt.Errorf("could not update Deluge incoming port: %w", err)
+	}
+	log.Info().
+		Uint16("port", port).
+		Msg("Updated Delgue incoming port.")
+	d.port = port
+	return nil
 }
