@@ -1,4 +1,11 @@
 #!/usr/bin/with-contenv bash
 
-exec \
-    s6-setuidgid abc /usr/bin/deluge-dynamic-incoming-port
+cmd=(exec s6-setuidgid abc
+  /usr/bin/deluge-dynamic-incoming-port
+)
+
+if [[ -n "${DELUGE_DYNAMIC_INCOMING_PORT_DEBUG:-}" ]]; then
+  cmd+=( "--verbose" )
+}
+
+"${cmd[@]}"

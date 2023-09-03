@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -15,15 +16,24 @@ import (
 	"golift.io/deluge"
 )
 
+var verbose = flag.Bool("verbose", false, "Whether to log verbosely.")
+
 func main() {
+	flag.Parse()
+
 	ctx := context.Background()
 
+	l := zerolog.InfoLevel
+	if *verbose {
+		l = zerolog.TraceLevel
+	}
 	out := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 		w.Out = prefixer.New(os.Stderr, func() string { return "[deluge-dynamic-incoming-port] " })
 		w.TimeFormat = time.RFC3339
 	})
-	log.Logger = zerolog.New(out).With().Timestamp().Logger()
+	log.Logger = zerolog.New(out).With().Timestamp().Logger().Level(l)
 	zerolog.DefaultContextLogger = &log.Logger
+	zerolog.SetGlobalLevel(l)
 
 	gateway, ok := os.LookupEnv("NATPMP_GATEWAY")
 	if !ok {
