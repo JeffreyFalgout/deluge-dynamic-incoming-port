@@ -131,7 +131,7 @@ type delugeWrapper struct {
 func newDelugeClient(addr string) (*delugeWrapper, error) {
 	deluge, err := deluge.NewNoAuth(&deluge.Config{
 		URL:      addr,
-		HTTPUser: "deluge",
+		Password: "deluge",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("deluge.NewNoAuth() = %w", err)
