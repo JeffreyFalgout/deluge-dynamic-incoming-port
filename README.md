@@ -1,10 +1,9 @@
-# Rsync - Docker mod for openssh-server
+# Dynamic incoming port - Docker mod for deluge
 
-This mod adds rsync to openssh-server, to be installed/updated during container start.
+Adds the ability for deluge to use a dynamic incoming port via NAT-PMP. For
+example, with esoteric routeres like ProtonVPN.
 
-In openssh-server docker arguments, set an environment variable `DOCKER_MODS=linuxserver/mods:openssh-server-rsync`
-
-If adding multiple mods, enter them in an array separated by `|`, such as `DOCKER_MODS=linuxserver/mods:openssh-server-rsync|linuxserver/mods:openssh-server-mod2`
+In openssh-server docker arguments, set an environment variable `DOCKER_MODS=ghcr.io/JeffreyFalgout/deluge-dynamic-incoming-port:latest`
 
 # Mod creation instructions
 
@@ -16,10 +15,3 @@ If adding multiple mods, enter them in an array separated by `|`, such as `DOCKE
 * Finally edit the `.github/workflows/BuildImage.yml`. Customize the vars for `BASEIMAGE` and `MODNAME`. Set the versioning logic if needed.
 * Ask the team to create a new branch named `<baseimagename>-<modname>`. Baseimage should be the name of the image the mod will be applied to. The new branch will be based on the `template` branch.
 * Submit PR against the branch created by the team.
-
-
-## Tips and tricks
-
-* Some images have helpers built in, these images are currently:
-    * [Openvscode-server](https://github.com/linuxserver/docker-openvscode-server/pull/10/files)
-    * [Code-server](https://github.com/linuxserver/docker-code-server/pull/95)
