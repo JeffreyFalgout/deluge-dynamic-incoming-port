@@ -57,6 +57,7 @@ func main() {
 			return nil
 		}()
 		if err != nil {
+			timeout *= 2
 			log.Print(err)
 			dur := time.Since(start)
 			sleep := timeout - dur
