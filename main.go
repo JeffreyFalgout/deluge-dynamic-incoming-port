@@ -155,7 +155,7 @@ func (d *delugeWrapper) updateIncomingPort(ctx context.Context, port uint16) err
 	}
 
 	if d.host == "" {
-		hostsResp, err := d.deluge.Get(ctx, deluge.GeHosts, nil)
+		hostsResp, err := d.deluge.Get(ctx, deluge.GeHosts, []string{})
 		if err != nil {
 			return fmt.Errorf("could not list Deluge hosts: %w", err)
 		}
