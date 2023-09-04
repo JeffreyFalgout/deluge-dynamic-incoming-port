@@ -9,8 +9,7 @@ RUN \
   mkdir /root-layer/ && \
   cp -r /src/root/* /root-layer/ && \
   mkdir -p /root-layer/usr/bin && \
-  go build . && \
-  cp deluge-dynamic-incoming-port /root-layer/usr/bin
+  go build . -o /root-layer/usr/bin/
 
 ## Single layer deployed image ##
 FROM scratch
