@@ -3,13 +3,15 @@
 ## Buildstage ##
 FROM golang:1.21 as buildstage
 
+COPY root/* /root-layer/
+
 WORKDIR /src
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
+COPY *.go ./
 RUN \
-  mkdir /root-layer/ && \
-  cp -r /src/root/* /root-layer/ && \
   mkdir -p /root-layer/usr/bin && \
-  go build . -o /root-layer/usr/bin/
+  go build -o /root-layer/usr/bin/
 
 ## Single layer deployed image ##
 FROM scratch
