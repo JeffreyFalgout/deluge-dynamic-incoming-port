@@ -3,7 +3,7 @@
 ## Buildstage ##
 FROM golang:1.21 as buildstage
 
-COPY root/* /root-layer/
+COPY root/ /root-layer/
 
 WORKDIR /src
 COPY go.mod go.sum ./
