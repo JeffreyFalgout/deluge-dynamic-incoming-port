@@ -4,7 +4,7 @@ cmd=(exec s6-setuidgid abc
   /usr/bin/deluge-dynamic-incoming-port
 )
 
-if [[ -n "${DELUGE_DYNAMIC_INCOMING_PORT_DEBUG:-}" ]]; then
+if [[ -n "${DEBUG_DELUGE_DYNAMIC_INCOMING_PORT:-}" ]]; then
   cmd+=( "--verbose" )
 fi
 
