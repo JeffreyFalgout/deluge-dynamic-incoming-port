@@ -129,6 +129,8 @@ type delugeWrapper struct {
 	deluge *deluge.Deluge
 	host   string
 	port   uint16
+
+	noopLogSampler zerolog.Sampler
 }
 
 func newDelugeClient(addr string) (*delugeWrapper, error) {
@@ -142,13 +144,17 @@ func newDelugeClient(addr string) (*delugeWrapper, error) {
 	if err != nil {
 		return nil, fmt.Errorf("deluge.NewNoAuth() = %w", err)
 	}
-	return &delugeWrapper{deluge: deluge}, nil
+	return &delugeWrapper{deluge: deluge, noopLogSampler: &zerolog.BasicSampler{N: 60}}, nil
 }
 
 func (d *delugeWrapper) updateIncomingPort(ctx context.Context, port uint16) error {
 	log := log.Ctx(ctx)
 	if port == d.port {
-		log.Debug().
+		l := zerolog.DebugLevel
+		if d.noopLogSampler.Sample(zerolog.InfoLevel) {
+			l = zerolog.InfoLevel
+		}
+		log.WithLevel(l).
 			Uint16("port", port).
 			Msg("Not updating Deluge since we think its port mapping is already correct.")
 		return nil
@@ -232,7 +238,6 @@ func logRequest(log *zerolog.Logger, req *http.Request) error {
 		Dict("headers", hdrs).
 		Str("body", string(body)).
 		Msg("Sending HTTP request to Deluge.")
-
 	return nil
 }
 
