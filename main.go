@@ -144,7 +144,7 @@ func newDelugeClient(addr string) (*delugeWrapper, error) {
 	if err != nil {
 		return nil, fmt.Errorf("deluge.NewNoAuth() = %w", err)
 	}
-	return &delugeWrapper{deluge: deluge, noopLogSampler: &zerolog.BasicSampler{N: 60}}, nil
+	return &delugeWrapper{deluge: deluge, noopLogSampler: &timeSampler{Every: 30 * time.Minute}}, nil
 }
 
 func (d *delugeWrapper) updateIncomingPort(ctx context.Context, port uint16) error {
@@ -258,4 +258,18 @@ func logResponse(log *zerolog.Logger, resp *http.Response) error {
 		Str("body", string(body)).
 		Msg("Received response from Deluge.")
 	return nil
+}
+
+type timeSampler struct {
+	Every time.Duration
+	last  time.Time
+}
+
+func (s *timeSampler) Sample(l zerolog.Level) bool {
+	now := time.Now()
+	if now.Sub(s.last) >= s.Every {
+		s.last = now
+		return true
+	}
+	return false
 }
