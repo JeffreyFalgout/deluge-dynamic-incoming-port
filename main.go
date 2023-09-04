@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
@@ -132,6 +135,9 @@ func newDelugeClient(addr string) (*delugeWrapper, error) {
 	deluge, err := deluge.NewNoAuth(&deluge.Config{
 		URL:      addr,
 		Password: "deluge",
+		Client: &http.Client{
+			Transport: loggingRoundTripper{http.DefaultTransport},
+		},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("deluge.NewNoAuth() = %w", err)
@@ -188,5 +194,63 @@ func (d *delugeWrapper) updateIncomingPort(ctx context.Context, port uint16) err
 		Uint16("port", port).
 		Msg("Updated Delgue incoming port.")
 	d.port = port
+	return nil
+}
+
+type loggingRoundTripper struct {
+	delegate http.RoundTripper
+}
+
+func (rt loggingRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	log := log.Ctx(req.Context())
+	if err := logRequest(log, req); err != nil {
+		return nil, err
+	}
+	resp, err := rt.delegate.RoundTrip(req)
+	if resp != nil {
+		if err := logResponse(log, resp); err != nil {
+			return nil, err
+		}
+	}
+	return resp, err
+}
+
+func logRequest(log *zerolog.Logger, req *http.Request) error {
+	hdrs := zerolog.Dict()
+	for k, v := range req.Header {
+		hdrs.Strs(k, v)
+	}
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
+	}
+	req.Body = io.NopCloser(bytes.NewReader(body))
+
+	log.Debug().
+		Str("method", req.Method).
+		Str("url", req.URL.String()).
+		Dict("headers", hdrs).
+		Str("body", string(body)).
+		Msg("Sending HTTP request to Deluge.")
+
+	return nil
+}
+
+func logResponse(log *zerolog.Logger, resp *http.Response) error {
+	hdrs := zerolog.Dict()
+	for k, v := range resp.Header {
+		hdrs.Strs(k, v)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+
+	log.Debug().
+		Str("status", resp.Status).
+		Dict("headers", hdrs).
+		Str("body", string(body)).
+		Msg("Received response from Deluge.")
 	return nil
 }
